@@ -90,6 +90,7 @@ public class InventoryController {
             }
 
             inventoryRepository.save(inventory);
+
             response.put("message", "Data saved successfully");
 
         } catch (DataIntegrityViolationException e) {
@@ -123,10 +124,15 @@ public class InventoryController {
         List<Product> products;
 
         if (category.equals("null")) {
+
             products = productRepository.findByNameLike(storeid, name);
+
         } else if (name.equals("null")) {
+
             products = productRepository.findByCategoryAndStoreId(storeid, category);
+
         } else {
+
             products = productRepository.findByNameAndCategory(storeid, name, category);
         }
 
@@ -156,6 +162,7 @@ public class InventoryController {
         boolean valid = serviceClass.ValidateProductId(id);
 
         if (!valid) {
+
             response.put("message", "Product not present in database");
             return response;
         }
@@ -173,8 +180,7 @@ public class InventoryController {
                                     @PathVariable Long storeId,
                                     @PathVariable Long productId) {
 
-        Inventory inventory = inventoryRepository
-                .findByProductIdandStoreId(productId, storeId);
+        Inventory inventory = inventoryRepository.findByProductIdandStoreId(productId, storeId);
 
         if (inventory == null) {
             return false;
