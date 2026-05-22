@@ -41,90 +41,83 @@ public class OrderService {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
-    public void saveOrder(PlaceOrderRequestDTO placeOrderRequest) {
+    public void saveOrder(
+            PlaceOrderRequestDTO placeOrderRequest) {
 
-        // Find customer
         Customer customer =
                 customerRepository.findByEmail(
                         placeOrderRequest.getEmail());
 
-        // Create customer if not present
         if (customer == null) {
 
             customer = new Customer();
 
-            customer.setName(placeOrderRequest.getName());
-            customer.setEmail(placeOrderRequest.getEmail());
-            customer.setPhone(placeOrderRequest.getPhone());
+            customer.setName(
+                    placeOrderRequest.getName());
+
+            customer.setEmail(
+                    placeOrderRequest.getEmail());
+
+            customer.setPhone(
+                    placeOrderRequest.getPhone());
 
             customerRepository.save(customer);
         }
 
-        // Find store
         Store store =
                 storeRepository.findById(
                         placeOrderRequest.getStoreId());
 
-        if (store == null) {
-
-            throw new RuntimeException("Store not found");
-        }
-
-        // Create order details
-        OrderDetails orderDetails = new OrderDetails();
+        OrderDetails orderDetails =
+                new OrderDetails();
 
         orderDetails.setCustomer(customer);
+
         orderDetails.setStore(store);
+
         orderDetails.setTotalPrice(
                 placeOrderRequest.getTotalPrice());
 
-        orderDetails.setDate(LocalDateTime.now());
+        orderDetails.setDate(
+                LocalDateTime.now());
 
-        // REQUIRED: Save order details
+        // REQUIRED SAVE
         orderDetailsRepository.save(orderDetails);
 
-        // Process ordered products
         for (PurchaseProductDTO purchaseProduct :
                 placeOrderRequest.getPurchaseProduct()) {
 
-            // Find product
             Product product =
                     productRepository.findById(
                             purchaseProduct.getProductId());
 
-            if (product == null) {
-
-                throw new RuntimeException("Product not found");
-            }
-
-            // Find inventory
             Inventory inventory =
-                    inventoryRepository.findByProductIdandStoreId(
+                    inventoryRepository
+                    .findByProductIdAndStoreId(
                             product.getId(),
                             store.getId());
 
-            if (inventory == null) {
-
-                throw new RuntimeException("Inventory not found");
-            }
-
-            // REQUIRED: Reduce stock level
+            // REQUIRED STOCK REDUCTION
             inventory.setStockLevel(
                     inventory.getStockLevel()
                     - purchaseProduct.getQuantity());
 
-            // REQUIRED: Save updated inventory
+            // REQUIRED INVENTORY SAVE
             inventoryRepository.save(inventory);
 
-            // Save order item
-            OrderItem orderItem = new OrderItem();
+            OrderItem orderItem =
+                    new OrderItem();
 
-            orderItem.setOrderDetails(orderDetails);
+            orderItem.setOrderDetails(
+                    orderDetails);
+
             orderItem.setProduct(product);
+
             orderItem.setQuantity(
                     purchaseProduct.getQuantity());
 
-            orderItem.setPrice(product.getPrice());
+            orderItem.setPrice(
+                    product.getPrice());
 
             orderItemRepository.save(orderItem);
         }
