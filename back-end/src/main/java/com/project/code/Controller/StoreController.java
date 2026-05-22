@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.code.DTO.PlaceOrderRequestDTO;
 import com.project.code.Model.Store;
 import com.project.code.Repo.StoreRepository;
 import com.project.code.Service.OrderService;
-import com.project.code.dto.PlaceOrderRequestDTO;
 
 @RestController
 @RequestMapping("/store")
@@ -33,21 +33,24 @@ public class StoreController {
 
         Store savedStore = storeRepository.save(store);
 
-        response.put("message", "Store created successfully with id " + savedStore.getId());
+        response.put(
+                "message",
+                "Store created successfully with id " + savedStore.getId());
 
         return response;
     }
 
-    @GetMapping("validate/{storeId}")
+    @GetMapping("/validate/{storeId}")
     public boolean validateStore(@PathVariable Long storeId) {
 
-        Store store = storeRepository.findByid(storeId);
+        Store store = storeRepository.findById(storeId);
 
         return store != null;
     }
 
     @PostMapping("/placeOrder")
-    public Map<String, String> placeOrder(@RequestBody PlaceOrderRequestDTO placeOrderRequest) {
+    public Map<String, String> placeOrder(
+            @RequestBody PlaceOrderRequestDTO placeOrderRequest) {
 
         Map<String, String> response = new HashMap<>();
 
@@ -59,9 +62,10 @@ public class StoreController {
 
         } catch (Exception e) {
 
-            response.put("Error", e.getMessage());
+            response.put("error", e.getMessage());
         }
 
         return response;
     }
 }
+
