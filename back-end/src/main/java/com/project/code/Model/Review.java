@@ -11,31 +11,24 @@ public class Review {
     @Id
     private String id;
 
-    // Customer who gave the review
     @NotNull(message = "Customer cannot be null")
     private Long customerId;
 
-    // Product being reviewed
     @NotNull(message = "Product cannot be null")
     private Long productId;
 
-    // Store where the product was purchased
     @NotNull(message = "Store cannot be null")
     private Long storeId;
 
-    // Rating given by customer
     @NotNull(message = "Rating cannot be null")
     private Integer rating;
 
-    // Review comment
     private String comment;
 
     public Review() {
     }
 
-    public Review(Long customerId, Long productId,
-                  Long storeId, Integer rating,
-                  String comment) {
+    public Review(Long customerId, Long productId, Long storeId, Integer rating, String comment) {
         this.customerId = customerId;
         this.productId = productId;
         this.storeId = storeId;
