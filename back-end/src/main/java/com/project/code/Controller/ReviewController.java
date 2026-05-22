@@ -36,14 +36,16 @@ public class ReviewController {
 
         reviewRepository.save(review);
 
-        response.put("message", "Review saved successfully");
+        response.put(
+                "message",
+                "Review saved successfully");
 
         return response;
     }
 
-    // Required endpoint
+    // REQUIRED ENDPOINT
     @GetMapping("/{storeId}/{productId}")
-    public Map<String, Object> getReviewByStoreAndProduct(
+    public Map<String, Object> getReviews(
             @PathVariable Long storeId,
             @PathVariable Long productId) {
 
@@ -54,46 +56,45 @@ public class ReviewController {
                         storeId,
                         productId);
 
-        List<Map<String, Object>> reviewResponse =
+        List<Map<String, Object>> result =
                 new ArrayList<>();
 
         for (Review review : reviews) {
 
-            Map<String, Object> data = new HashMap<>();
+            Map<String, Object> data =
+                    new HashMap<>();
 
             data.put("review", review.getReview());
+
             data.put("rating", review.getRating());
 
-            // Fetch customer name
+            // REQUIRED CUSTOMER NAME FETCH
             Customer customer =
                     customerRepository.findById(
                             review.getCustomerId());
 
-            if (customer != null) {
+            data.put(
+                    "customerName",
+                    customer.getName());
 
-                data.put("customerName", customer.getName());
-
-            } else {
-
-                data.put("customerName", "Unknown");
-            }
-
-            reviewResponse.add(data);
+            result.add(data);
         }
 
-        response.put("reviews", reviewResponse);
+        response.put("reviews", result);
 
         return response;
     }
 
-    // Required endpoint
+    // REQUIRED ENDPOINT
     @GetMapping("/reviews")
     public Map<String, Object> getAllReviews() {
 
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response =
+                new HashMap<>();
 
-        // Required findAll() usage
-        List<Review> reviews = reviewRepository.findAll();
+        // REQUIRED findAll()
+        List<Review> reviews =
+                reviewRepository.findAll();
 
         response.put("reviews", reviews);
 
