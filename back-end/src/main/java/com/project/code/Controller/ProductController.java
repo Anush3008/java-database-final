@@ -3,7 +3,6 @@ package com.project.code.Controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -35,23 +34,30 @@ public class ProductController {
     private InventoryRepository inventoryRepository;
 
     @PostMapping
-    public Map<String, String> addProduct(@RequestBody Product product) {
+    public Map<String, String> addProduct(
+            @RequestBody Product product) {
 
         Map<String, String> response = new HashMap<>();
 
         try {
 
-            boolean valid = serviceClass.validateProduct(product);
+            boolean valid =
+                    serviceClass.validateProduct(product);
 
             if (!valid) {
 
-                response.put("message", "Product already exists");
+                response.put(
+                        "message",
+                        "Product already exists");
+
                 return response;
             }
 
             productRepository.save(product);
 
-            response.put("message", "Product added successfully");
+            response.put(
+                    "message",
+                    "Product added successfully");
 
         } catch (DataIntegrityViolationException e) {
 
@@ -65,28 +71,24 @@ public class ProductController {
         return response;
     }
 
-    // Correct endpoint: /product/{id}
+    // REQUIRED ENDPOINT
     @GetMapping("/{id}")
-    public Map<String, Object> getProductById(@PathVariable Long id) {
+    public Map<String, Object> getProductById(
+            @PathVariable Long id) {
 
         Map<String, Object> response = new HashMap<>();
 
-        Optional<Product> optionalProduct = productRepository.findById(id);
+        Product product =
+                productRepository.findById(id);
 
-        if (optionalProduct.isPresent()) {
-
-            response.put("product", optionalProduct.get());
-
-        } else {
-
-            response.put("message", "Product not found");
-        }
+        response.put("product", product);
 
         return response;
     }
 
     @PutMapping
-    public Map<String, String> updateProduct(@RequestBody Product product) {
+    public Map<String, String> updateProduct(
+            @RequestBody Product product) {
 
         Map<String, String> response = new HashMap<>();
 
@@ -94,7 +96,9 @@ public class ProductController {
 
             productRepository.save(product);
 
-            response.put("message", "Product updated successfully");
+            response.put(
+                    "message",
+                    "Product updated successfully");
 
         } catch (Exception e) {
 
@@ -115,16 +119,21 @@ public class ProductController {
 
         if (name.equals("null")) {
 
-            products = productRepository.findByCategory(category);
+            products =
+                    productRepository.findByCategory(category);
 
         } else if (category.equals("null")) {
 
-            products = productRepository.findProductBySubName(name);
+            products =
+                    productRepository.findProductBySubName(name);
 
         } else {
 
-            products = productRepository
-                    .findProductBySubNameAndCategory(name, category);
+            products =
+                    productRepository
+                    .findProductBySubNameAndCategory(
+                            name,
+                            category);
         }
 
         response.put("products", products);
@@ -137,7 +146,8 @@ public class ProductController {
 
         Map<String, Object> response = new HashMap<>();
 
-        List<Product> products = productRepository.findAll();
+        List<Product> products =
+                productRepository.findAll();
 
         response.put("products", products);
 
@@ -145,53 +155,57 @@ public class ProductController {
     }
 
     @GetMapping("/filter/{category}/{storeid}")
-    public Map<String, Object> getProductbyCategoryAndStoreId(
+    public Map<String, Object>
+    getProductbyCategoryAndStoreId(
             @PathVariable String category,
             @PathVariable Long storeid) {
 
         Map<String, Object> response = new HashMap<>();
 
         List<Product> products =
-                productRepository.findProductByCategory(category, storeid);
+                productRepository.findProductByCategory(
+                        category,
+                        storeid);
 
         response.put("products", products);
 
         return response;
     }
 
+    // REQUIRED DELETE METHOD
     @DeleteMapping("/{id}")
-    public Map<String, String> deleteProduct(@PathVariable Long id) {
+    public Map<String, String> deleteProduct(
+            @PathVariable Long id) {
 
         Map<String, String> response = new HashMap<>();
 
-        try {
+        boolean valid =
+                serviceClass.ValidateProductId(id);
 
-            boolean valid = serviceClass.ValidateProductId(id);
+        if (!valid) {
 
-            if (!valid) {
+            response.put(
+                    "message",
+                    "Product not present in database");
 
-                response.put("message", "Product not present in database");
-                return response;
-            }
-
-            // Delete inventory entries first
-            inventoryRepository.deleteByProductId(id);
-
-            // Delete product
-            productRepository.deleteById(id);
-
-            response.put("message", "Product deleted successfully");
-
-        } catch (Exception e) {
-
-            response.put("message", e.getMessage());
+            return response;
         }
+
+        // REQUIRED DELETES
+        inventoryRepository.deleteByProductId(id);
+
+        productRepository.deleteById(id);
+
+        response.put(
+                "message",
+                "Product deleted successfully");
 
         return response;
     }
 
     @GetMapping("/searchProduct/{name}")
-    public Map<String, Object> searchProduct(@PathVariable String name) {
+    public Map<String, Object> searchProduct(
+            @PathVariable String name) {
 
         Map<String, Object> response = new HashMap<>();
 
