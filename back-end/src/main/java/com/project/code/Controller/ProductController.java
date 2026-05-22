@@ -3,6 +3,7 @@ package com.project.code.Controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -43,6 +44,7 @@ public class ProductController {
             boolean valid = serviceClass.validateProduct(product);
 
             if (!valid) {
+
                 response.put("message", "Product already exists");
                 return response;
             }
@@ -63,14 +65,22 @@ public class ProductController {
         return response;
     }
 
-    @GetMapping("/product/{id}")
-    public Map<String, Object> getProductbyId(@PathVariable Long id) {
+    // Correct endpoint: /product/{id}
+    @GetMapping("/{id}")
+    public Map<String, Object> getProductById(@PathVariable Long id) {
 
         Map<String, Object> response = new HashMap<>();
 
-        Product product = productRepository.findById(id);
+        Optional<Product> optionalProduct = productRepository.findById(id);
 
-        response.put("products", product);
+        if (optionalProduct.isPresent()) {
+
+            response.put("product", optionalProduct.get());
+
+        } else {
+
+            response.put("message", "Product not found");
+        }
 
         return response;
     }
@@ -95,8 +105,9 @@ public class ProductController {
     }
 
     @GetMapping("/category/{name}/{category}")
-    public Map<String, Object> filterbyCategoryProduct(@PathVariable String name,
-                                                       @PathVariable String category) {
+    public Map<String, Object> filterbyCategoryProduct(
+            @PathVariable String name,
+            @PathVariable String category) {
 
         Map<String, Object> response = new HashMap<>();
 
@@ -112,7 +123,8 @@ public class ProductController {
 
         } else {
 
-            products = productRepository.findProductBySubNameAndCategory(name, category);
+            products = productRepository
+                    .findProductBySubNameAndCategory(name, category);
         }
 
         response.put("products", products);
@@ -132,15 +144,17 @@ public class ProductController {
         return response;
     }
 
-    @GetMapping("filter/{category}/{storeid}")
-    public Map<String, Object> getProductbyCategoryAndStoreId(@PathVariable String category,
-                                                              @PathVariable Long storeid) {
+    @GetMapping("/filter/{category}/{storeid}")
+    public Map<String, Object> getProductbyCategoryAndStoreId(
+            @PathVariable String category,
+            @PathVariable Long storeid) {
 
         Map<String, Object> response = new HashMap<>();
 
-        List<Product> products = productRepository.findProductByCategory(category, storeid);
+        List<Product> products =
+                productRepository.findProductByCategory(category, storeid);
 
-        response.put("product", products);
+        response.put("products", products);
 
         return response;
     }
@@ -150,18 +164,28 @@ public class ProductController {
 
         Map<String, String> response = new HashMap<>();
 
-        boolean valid = serviceClass.ValidateProductId(id);
+        try {
 
-        if (!valid) {
+            boolean valid = serviceClass.ValidateProductId(id);
 
-            response.put("message", "Product not present in database");
-            return response;
+            if (!valid) {
+
+                response.put("message", "Product not present in database");
+                return response;
+            }
+
+            // Delete inventory entries first
+            inventoryRepository.deleteByProductId(id);
+
+            // Delete product
+            productRepository.deleteById(id);
+
+            response.put("message", "Product deleted successfully");
+
+        } catch (Exception e) {
+
+            response.put("message", e.getMessage());
         }
-
-        inventoryRepository.deleteByProductId(id);
-        productRepository.deleteById(id);
-
-        response.put("message", "Product deleted successfully");
 
         return response;
     }
@@ -171,7 +195,8 @@ public class ProductController {
 
         Map<String, Object> response = new HashMap<>();
 
-        List<Product> products = productRepository.findProductBySubName(name);
+        List<Product> products =
+                productRepository.findProductBySubName(name);
 
         response.put("products", products);
 
