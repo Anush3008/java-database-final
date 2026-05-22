@@ -1,6 +1,7 @@
 package com.project.code.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,50 +44,76 @@ public class OrderService {
 
     public void saveOrder(PlaceOrderRequestDTO placeOrderRequest) {
 
+        // Find customer by email
         Customer customer = customerRepository.findByEmail(placeOrderRequest.getEmail());
 
+        // Create customer if not exists
         if (customer == null) {
-            customer = new Customer(
-                    placeOrderRequest.getName(),
-                    placeOrderRequest.getEmail(),
-                    placeOrderRequest.getPhone());
+            customer = new Customer();
+            customer.setName(placeOrderRequest.getName());
+            customer.setEmail(placeOrderRequest.getEmail());
+            customer.setPhone(placeOrderRequest.getPhone());
 
             customerRepository.save(customer);
         }
 
-        Store store = storeRepository.findById(placeOrderRequest.getStoreId());
+        // Find store
+        Optional<Store> optionalStore = storeRepository.findById(placeOrderRequest.getStoreId());
 
-        if (store == null) {
+        if (!optionalStore.isPresent()) {
             throw new RuntimeException("Store not found");
         }
 
+        Store store = optionalStore.get();
+
+        // Create order details
         OrderDetails orderDetails = new OrderDetails();
         orderDetails.setCustomer(customer);
         orderDetails.setStore(store);
         orderDetails.setTotalPrice(placeOrderRequest.getTotalPrice());
         orderDetails.setDate(LocalDateTime.now());
 
+        // Save order details to database
         orderDetailsRepository.save(orderDetails);
 
+        // Process all ordered products
         for (PurchaseProductDTO purchaseProduct : placeOrderRequest.getPurchaseProduct()) {
 
-            Product product = productRepository.findById(purchaseProduct.getProductId());
+            // Find product
+            Optional<Product> optionalProduct =
+                    productRepository.findById(purchaseProduct.getProductId());
 
-            Inventory inventory = inventoryRepository.findByProductIdandStoreId(
-                    product.getId(),
-                    store.getId());
+            if (!optionalProduct.isPresent()) {
+                throw new RuntimeException("Product not found");
+            }
 
+            Product product = optionalProduct.get();
+
+            // Find inventory for product and store
+            Inventory inventory = inventoryRepository
+                    .findByProductIdandStoreId(
+                            product.getId(),
+                            store.getId());
+
+            if (inventory == null) {
+                throw new RuntimeException("Inventory not found");
+            }
+
+            // Reduce inventory stock
             inventory.setStockLevel(
                     inventory.getStockLevel() - purchaseProduct.getQuantity());
 
+            // Save updated inventory
             inventoryRepository.save(inventory);
 
-            OrderItem orderItem = new OrderItem(
-                    orderDetails,
-                    product,
-                    purchaseProduct.getQuantity(),
-                    product.getPrice());
+            // Create order item
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrderDetails(orderDetails);
+            orderItem.setProduct(product);
+            orderItem.setQuantity(purchaseProduct.getQuantity());
+            orderItem.setPrice(product.getPrice());
 
+            // Save order item
             orderItemRepository.save(orderItem);
         }
     }
