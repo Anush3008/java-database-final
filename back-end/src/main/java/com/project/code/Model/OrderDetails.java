@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -26,6 +27,7 @@ public class OrderDetails {
     @JsonManagedReference
     private Customer customer;
 
+    // Required relationship mapping
     @ManyToOne
     @JoinColumn(name = "store_id")
     @JsonManagedReference
@@ -33,16 +35,24 @@ public class OrderDetails {
 
     private Double totalPrice;
 
+    // Required LocalDateTime field
+    @Column(name = "order_date")
     private LocalDateTime date;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "orderDetails",
+               fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<OrderItem> orderItems;
 
     public OrderDetails() {
     }
 
-    public OrderDetails(Customer customer, Store store, Double totalPrice, LocalDateTime date) {
+    public OrderDetails(
+            Customer customer,
+            Store store,
+            Double totalPrice,
+            LocalDateTime date) {
+
         this.customer = customer;
         this.store = store;
         this.totalPrice = totalPrice;
@@ -89,7 +99,9 @@ public class OrderDetails {
         return orderItems;
     }
 
-    public void setOrderItems(List<OrderItem> orderItems) {
+    public void setOrderItems(
+            List<OrderItem> orderItems) {
+
         this.orderItems = orderItems;
     }
 }
